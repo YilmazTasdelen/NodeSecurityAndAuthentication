@@ -2,10 +2,38 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const express = require('express');
+const helmet = require('helmet');
 
 const PORT = 3001;
 
 const app = express();
+/***
+ * for securing some information on response headers like this api developed by express
+ * x-powered-by header for example
+ * additionall this library 
+ * set scritct-tansport-security tue which means turn all http req into https
+last but not least sets the content-security-policy header  
+which is provide protection from cross side scripting attack.
+cross-side-scripting is like sql injection. user send script to db which is running on ever user screen!!. that script can steal user tokens and session or cookies etc.
+
+By default, Helmet sets the following headers:
+
+Content-Security-Policy: default-src 'self';base-uri 'self';block-all-mixed-content;font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests
+Cross-Origin-Embedder-Policy: require-corp
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
+Expect-CT: max-age=0
+Origin-Agent-Cluster: ?1
+Referrer-Policy: no-referrer
+Strict-Transport-Security: max-age=15552000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-DNS-Prefetch-Control: off
+X-Download-Options: noopen
+X-Frame-Options: SAMEORIGIN
+X-Permitted-Cross-Domain-Policies: none
+X-XSS-Protection: 0
+ */
+app.use(helmet());
 
 app.get('/secret', (req, res) => {
     res.sendFile(`some secret value: 48`);
