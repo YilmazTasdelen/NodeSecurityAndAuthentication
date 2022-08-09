@@ -122,7 +122,10 @@ app.get('/failure', (req, res) => {
 });
 
 
-app.get('/auth/logut', (req, res) => { });
+app.get('/auth/logut', (req, res) => {
+    req.logout(); //Removes req.user and clears any logged in session
+    return res.redirect('/');
+});
 
 
 app.get('/secret', checkLoggedIn, (req, res) => {
