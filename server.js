@@ -3,8 +3,31 @@ const path = require('path');
 const https = require('https');
 const express = require('express');
 const helmet = require('helmet');
+const pasport = require('passport');
+const { Strategy } = require('passport-google-oauth20');
+const passport = require('passport');
+
+require('dotenv').config();
 
 const PORT = 3001;
+
+const config = {
+    CLIENT_ID: process.env.CLIENT_ID,
+    CLIENT_SECRET: process.env.CLIENT_SECRET,
+};
+
+const AUTH_OPTIONS = {
+    callbackURL: '/auth/google/callback',
+    clientId: config.CLIENT_ID,
+    clientSecret: config.CLIENT_SECRET,
+};
+
+function verifyCallback(accessToken, refreshToken, profile, done) {
+    console.log('Google profile', profile);
+    done(null, profile);
+}
+
+app.use(verifyCallback);
 
 const app = express();
 /***
@@ -34,8 +57,37 @@ X-Permitted-Cross-Domain-Policies: none
 X-XSS-Protection: 0
  */
 app.use(helmet());
+app.use(passport.initialize());
 
-app.get('/secret', (req, res) => {
+app.use(new Strategy({
+
+}))
+
+// app.use((req, res, next) => {
+//     const isLoggedIn = true; //TODO
+//     if (!isLoggedIn) {
+//         return res.status(401).json({ error: 'u must login' });
+//     }
+// })
+
+
+
+function checkLoggedIn(req, res, next) {
+    const isLoggedIn = true; //TODO
+    if (!isLoggedIn) {
+        return res.status(401).json({ error: 'u must login' });
+    }
+}
+
+
+app.get('/auth/google', (req, res) => { });
+
+app.get('/auth/google/callback', (req, res) => { });
+
+app.get('/auth/logut', (req, res) => { });
+
+
+app.get('/secret', checkLoggedIn, (req, res) => {
     res.sendFile(`some secret value: 48`);
 });
 
