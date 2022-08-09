@@ -3,9 +3,9 @@ const path = require('path');
 const https = require('https');
 const express = require('express');
 const helmet = require('helmet');
-const pasport = require('passport');
 const { Strategy } = require('passport-google-oauth20');
 const passport = require('passport');
+const cookieSession = require('cookie-session');
 
 require('dotenv').config();
 
@@ -14,6 +14,8 @@ const PORT = 3000;
 const config = {
     CLIENT_ID: process.env.CLIENT_ID,
     CLIENT_SECRET: process.env.CLIENT_SECRET,
+    COOKIE_KEY_1: process.env.COOKIE_KEY_1,
+    COOKIE_KEY_2: process.env.COOKIE_KEY_2,
 };
 
 const AUTH_OPTIONS = {
@@ -56,7 +58,16 @@ X-Permitted-Cross-Domain-Policies: none
 X-XSS-Protection: 0
  */
 app.use(helmet());
+// cookie needs to be set up before passport use it so we will ad middleware here before password midw.
+app.use(cookieSession({
+    name: 'session',
+    maxAge: 24 * 60 * 60 * 1000,          // life time in ms 
+    keys: [config.COOKIE_KEY_1, config.COOKIE_KEY_2], // for sign and verify cookies. Have at least 2 key for dont logut active users while updatin one of the keys                
+}));
+
+
 app.use(passport.initialize());
+app.use(passport.session()); //its authenticate to session that sended to server
 
 passport.use(new Strategy(AUTH_OPTIONS, verifyCallback));
 
@@ -67,9 +78,20 @@ passport.use(new Strategy(AUTH_OPTIONS, verifyCallback));
 //     }
 // })
 
+// Save the session to the cookie
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
 
+// Read the session from the cookie
+passport.deserializeUser((id, done) => {
+    // User.findById(id).then(user => {
+    //   done(null, user);
+    // });
+    done(null, id);
+});
 
-function checkLoggedIn(req, res, next) {
+function checkLoggedIn(req, res, next) { //req.user
     const isLoggedIn = true; //TODO
     if (!isLoggedIn) {
         return res.status(401).json({ error: 'u must login' });
@@ -87,7 +109,7 @@ app.get('/auth/google/callback',
     passport.authenticate('google', {
         failureRedirect: '/failure',
         successRedirect: '/',
-        session: false,
+        //session: true, // default true
     }),
     (req, res) => {
         // res.redirect();
