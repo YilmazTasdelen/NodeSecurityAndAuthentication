@@ -92,7 +92,8 @@ passport.deserializeUser((id, done) => {
 });
 
 function checkLoggedIn(req, res, next) { //req.user
-    const isLoggedIn = true; //TODO
+    console.log('current user is: ', req.user);
+    const isLoggedIn = req.isAuthenticated() && req.user;
     if (!isLoggedIn) {
         return res.status(401).json({ error: 'u must login' });
     }
