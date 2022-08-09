@@ -9,7 +9,7 @@ const passport = require('passport');
 
 require('dotenv').config();
 
-const PORT = 3001;
+const PORT = 3000;
 
 const config = {
     CLIENT_ID: process.env.CLIENT_ID,
@@ -18,16 +18,15 @@ const config = {
 
 const AUTH_OPTIONS = {
     callbackURL: '/auth/google/callback',
-    clientId: config.CLIENT_ID,
+    clientID: config.CLIENT_ID,
     clientSecret: config.CLIENT_SECRET,
 };
 
 function verifyCallback(accessToken, refreshToken, profile, done) {
     console.log('Google profile', profile);
-    done(null, profile);
+    done(null, profile); // error=null and user data
 }
 
-app.use(verifyCallback);
 
 const app = express();
 /***
@@ -59,9 +58,7 @@ X-XSS-Protection: 0
 app.use(helmet());
 app.use(passport.initialize());
 
-app.use(new Strategy({
-
-}))
+passport.use(new Strategy(AUTH_OPTIONS, verifyCallback));
 
 // app.use((req, res, next) => {
 //     const isLoggedIn = true; //TODO
@@ -80,9 +77,27 @@ function checkLoggedIn(req, res, next) {
 }
 
 
-app.get('/auth/google', (req, res) => { });
+app.get('/auth/google',
+    passport.authenticate('google', {
+        //scope:['email','profile'] //scopes we need
+        scope: ['email']
+    }));
 
-app.get('/auth/google/callback', (req, res) => { });
+app.get('/auth/google/callback',
+    passport.authenticate('google', {
+        failureRedirect: '/failure',
+        successRedirect: '/',
+        session: false,
+    }),
+    (req, res) => {
+        // res.redirect();
+        console.log('google callback');
+    });
+
+app.get('/failure', (req, res) => {
+    return res.send('Failed to log in!');
+});
+
 
 app.get('/auth/logut', (req, res) => { });
 
